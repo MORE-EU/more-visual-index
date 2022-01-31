@@ -1,8 +1,10 @@
 package eu.more2020.index;
 
 import com.google.common.math.StatsAccumulator;
+import it.unimi.dsi.fastutil.ints.Int2ObjectLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectSortedMap;
 
 import java.util.*;
 
@@ -13,12 +15,16 @@ public class TreeNode {
     private final Integer label;
 
     protected List<Point> points;
-    private Int2ObjectMap<TreeNode> children;
+
+    private Int2ObjectSortedMap<TreeNode> children;
+
+    private TreeNode parent;
 
     private Map<Integer, StatsAccumulator> stats;
 
-    public TreeNode(Integer label) {
+    public TreeNode(Integer label, TreeNode parent) {
         this.label = label;
+        this.parent = parent;
         counter++;
     }
 
@@ -35,7 +41,6 @@ public class TreeNode {
             s.add(values.get(i));
             stats.put(i, s);
         }
-
     }
 
     public boolean hasStats() {
@@ -64,11 +69,11 @@ public class TreeNode {
 
     public TreeNode getOrAddChild(Integer label) {
         if (children == null) {
-            children = new Int2ObjectOpenHashMap();
+            children = new Int2ObjectLinkedOpenHashMap();
         }
         TreeNode child = getChild(label);
         if (child == null) {
-            child = new TreeNode(label);
+            child = new TreeNode(label, this);
             children.put(label, child);
         }
         return child;
@@ -82,12 +87,17 @@ public class TreeNode {
         return children == null ? null : children.values();
     }
 
+    public TreeNode getParent() {
+        return parent;
+    }
+
     @Override
     public String toString() {
         return "TreeNode{" +
                 "label=" + label +
-                ", children=" + children +
-                ", stats=" + stats +
+//                ", parent=" + (parent != null ? parent.getLabel() : "null")+
+//                ", children=" + children +
+//                ", stats=" + stats +
                 '}';
     }
 

@@ -42,10 +42,11 @@ public class Schema {
         return csv;
     }
 
-    public Schema(String csv, Character delimiter, int timeColumn) {
+    public Schema(String csv, Character delimiter, int timeColumn, boolean hasHeader) {
         this.csv = csv;
         this.delimiter = delimiter;
         this.timeColumn = timeColumn;
+        this.hasHeader = hasHeader;
 
     }
 
