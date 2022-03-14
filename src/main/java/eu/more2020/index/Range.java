@@ -3,7 +3,6 @@ package eu.more2020.index;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 
@@ -27,10 +26,6 @@ public class Range implements Serializable {
 
     public boolean contains(LocalDateTime x) {
         return from.isBefore(x) && to.isAfter(x);
-    }
-
-    public boolean contains(Point point) {
-        return contains(point.getTime());
     }
 
     public boolean intersects(Range other) {

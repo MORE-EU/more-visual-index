@@ -2,44 +2,45 @@ package eu.more2020.index;
 
 import com.google.common.math.StatsAccumulator;
 import it.unimi.dsi.fastutil.ints.Int2ObjectLinkedOpenHashMap;
-import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
-import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectSortedMap;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 public class TreeNode {
 
-    private static int counter;
 
-    private final Integer label;
+    private final int label;
 
-    protected List<Point> points;
+    private final int level;
+
+
+    private long fileOffsetStart;
+
+    private int dataPointCount = 0;
+
 
     private Int2ObjectSortedMap<TreeNode> children;
 
-    private TreeNode parent;
-
     private Map<Integer, StatsAccumulator> stats;
 
-    public TreeNode(Integer label, TreeNode parent) {
+    public TreeNode(int label, int level) {
         this.label = label;
-        this.parent = parent;
-        counter++;
+        this.level = level;
     }
 
-    public static int getInstanceCount() {
-        return counter;
-    }
 
-    public void adjustStats(List<Float> values) {
+    public void adjustStats(String[] row, Schema schema) {
         if (stats == null) {
             stats = new HashMap<>();
         }
-        for(int i = 0; i < values.size(); i++) {
-            StatsAccumulator s = new StatsAccumulator();
-            s.add(values.get(i));
-            stats.put(i, s);
+        for (int colIndex = 0; colIndex < row.length; colIndex++) {
+            if (colIndex != schema.getTimeColumn()) {
+                StatsAccumulator statsAcc = stats.computeIfAbsent(colIndex, i -> new StatsAccumulator());
+                statsAcc.add(Double.parseDouble(row[colIndex]));
+            }
         }
     }
 
@@ -47,16 +48,20 @@ public class TreeNode {
         return stats != null;
     }
 
-    public TreeNode addPoint(Point point) {
-        if (points == null) {
-            points = new ArrayList<>();
-        }
-        points.add(point);
-        return this;
+    public long getFileOffsetStart() {
+        return fileOffsetStart;
     }
 
-    public List<Point> getPoints() {
-        return points;
+    public void setFileOffsetStart(long fileOffsetStart) {
+        this.fileOffsetStart = fileOffsetStart;
+    }
+
+    public int getDataPointCount() {
+        return dataPointCount;
+    }
+
+    public void setDataPointCount(int dataPointCount) {
+        this.dataPointCount = dataPointCount;
     }
 
     public Map<Integer, StatsAccumulator> getStats() {
@@ -67,19 +72,19 @@ public class TreeNode {
         return children != null ? children.get(label) : null;
     }
 
-    public TreeNode getOrAddChild(Integer label) {
+    public TreeNode getOrAddChild(int label) {
         if (children == null) {
             children = new Int2ObjectLinkedOpenHashMap();
         }
         TreeNode child = getChild(label);
         if (child == null) {
-            child = new TreeNode(label, this);
+            child = new TreeNode(label, level + 1);
             children.put(label, child);
         }
         return child;
     }
 
-    public Integer getLabel() {
+    public int getLabel() {
         return label;
     }
 
@@ -87,23 +92,19 @@ public class TreeNode {
         return children == null ? null : children.values();
     }
 
-    public TreeNode getParent() {
-        return parent;
+    public int getLevel() {
+        return level;
     }
+
 
     @Override
     public String toString() {
         return "TreeNode{" +
                 "label=" + label +
-//                ", parent=" + (parent != null ? parent.getLabel() : "null")+
-//                ", children=" + children +
-//                ", stats=" + stats +
-                '}';
+                ", level=" + level +
+                ", fileOffsetStart=" + fileOffsetStart +
+                ", dataPointCount=" + dataPointCount +
+                ", stats = " + (stats == null ? null : "{" + stats.entrySet().stream().map(e -> e.getKey() + ": " + e.getValue().mean()).collect(Collectors.joining(", ")) + "}") +
+                "}";
     }
-
-    public void convertToNonleaf() {
-        points = null;
-        stats = null;
-    }
-
 }
